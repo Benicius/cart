@@ -7,10 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping(value = "/api/cart")
+@RequestMapping(value = "/api/carts")
 public class CartController {
 
     private final CartService cartService;
@@ -23,8 +21,9 @@ public class CartController {
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public ResponseEntity<Cart> createCart(
-            @RequestHeader final List<String> names,
+            @RequestHeader final String name,
+            @RequestHeader(required = false) final boolean hasTopping,
             @RequestBody final Cart cart){
-        return new ResponseEntity<>(cartService.createCart(names, cart), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(cartService.createCart(name,hasTopping, cart), HttpStatus.ACCEPTED);
     }
 }

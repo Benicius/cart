@@ -27,13 +27,14 @@ public class ProductClient {
     }
 
     public CompletableFuture<Product> getProduct(
-            final String name){
+            final String name,
+            final boolean hasTopping){
 
         final Map<String, String> headers =
                 HeaderHelper.addParams(name);
 
         final UriComponentsBuilder builder =
-                buildQueryParameters(name);
+                buildQueryParameters(name, hasTopping);
 
         try{
 
@@ -53,18 +54,25 @@ public class ProductClient {
     }
 
     private UriComponentsBuilder buildQueryParameters(
-            final String name) {
+            final String name,
+            final boolean hasTopping) {
+
+        final String type;
 
         UriComponentsBuilder builder =
-                UriComponentsBuilder.fromUriString("http://localhost:8081".concat("/api/drinks/filter"));
+                UriComponentsBuilder.fromUriString("http://localhost:8081".concat("/api/products/filter"));
 
         if (name != null){
             builder.queryParam("name", name);
         }
 
-        /*if (type != null){
+        if(hasTopping){
+            type = "TOPPING";
             builder.queryParam("type", type);
-        }*/
+        } else {
+            type = "DRINK";
+            builder.queryParam("type", type);
+        }
 
         return builder;
     }

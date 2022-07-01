@@ -17,6 +17,17 @@ public class Cart {
 
     private Integer cartQuantity;
 
+    @Enumerated(EnumType.STRING)
+    private CartStatus cartStatus = CartStatus.PROGRESS;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public List<ItemCart> getItems() {
         return items;
     }
@@ -39,5 +50,13 @@ public class Cart {
 
     public void setCartQuantity(Integer cartQuantity) {
         this.cartQuantity = cartQuantity;
+    }
+
+    public CartStatus getCartStatus() {
+        return cartStatus;
+    }
+
+    public void setCartStatus(CartStatus cartStatus) {
+        this.cartStatus = cartStatus;
     }
 }

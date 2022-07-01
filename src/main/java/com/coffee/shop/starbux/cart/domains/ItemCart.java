@@ -3,6 +3,8 @@ package com.coffee.shop.starbux.cart.domains;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class ItemCart {
@@ -10,14 +12,14 @@ public class ItemCart {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private Product product;
+    @OneToMany(cascade = CascadeType.ALL)
+    private List<Product> products = new ArrayList<>(4);
 
     private BigDecimal price;
 
     private Integer quantity;
 
-    private LocalDate date;
+    private LocalDate date = LocalDate.now();
 
     public Long getId() {
         return id;
@@ -27,14 +29,13 @@ public class ItemCart {
         this.id = id;
     }
 
-    public Product getProduct() {
-        return product;
+    public List<Product> getProducts() {
+        return products;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setProducts(List<Product> products) {
+        this.products = products;
     }
-
 
     public BigDecimal getPrice() {
         return price;

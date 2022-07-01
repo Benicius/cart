@@ -11,18 +11,28 @@ import javax.persistence.Id;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Product {
 
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long idRest;
+    private Long id;
     private String name;
     private Double price;
     private String description;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getIdRest() {
+        return idRest;
+    }
+
+    public void setIdRest(Long idRest) {
+        this.idRest = idRest;
     }
 
     public String getName() {

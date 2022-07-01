@@ -17,8 +17,8 @@ public class ProductService {
         this.productClient = productClient;
     }
 
-    public Product getProduct(String name){
-        CompletableFuture<Product> product = productClient.getProduct(name);
+    public Product getProduct(final String name, final boolean hasTopping){
+        CompletableFuture<Product> product = productClient.getProduct(name, hasTopping);
         return product.join();
     }
 }
