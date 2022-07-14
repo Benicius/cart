@@ -2,10 +2,7 @@ package com.coffee.shop.starbux.cart.domains;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,6 +15,9 @@ public class Product {
     private String name;
     private Double price;
     private String description;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    private ItemCart itemCart;
 
     public Long getId() {
         return id;

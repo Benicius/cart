@@ -7,8 +7,9 @@ import com.coffee.shop.starbux.cart.domains.Product;
 import com.coffee.shop.starbux.cart.repository.CartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,17 +26,24 @@ public class CartService {
     }
 
     public Cart createCart(final String name,final boolean hasTopping, final Cart cart){
-        /*validateItems(cart.getItems());
-        validateName(name);*/
 
         Product productResponse = productService.getProduct(name, hasTopping);
-
         Cart cartTemp = lastCart();
+
         if (cartTemp.getId() == null){
             cartTemp = validatingHasTopping(hasTopping, productResponse, new Cart());
         } else if (!cartTemp.getItems().isEmpty() && cartTemp.getCartStatus() == CartStatus.PROGRESS){
             cartTemp = validatingHasTopping(hasTopping, productResponse, cartTemp);
         }
+
+        List<ItemCart> itemCarts = calculateItemPrice(cartTemp.getItems());
+
+        cartTemp.setItems(itemCarts);
+        BigDecimal cartPrice = calculateCartPrice(itemCarts);
+        cartTemp.setCartPrice(cartPrice);
+
+        Integer cartQuantity = calculateCartQuantity(itemCarts);
+        cartTemp.setCartQuantity(cartQuantity);
 
         return cartRepository.save(cartTemp);
     }
@@ -61,43 +69,50 @@ public class CartService {
             List<ItemCart> items = cart.getItems();
             if(!items.isEmpty()){
                 item =  items.get(items.size()-1);
-                List<Product> productsTemp = item.getProducts();
-                if(productsTemp.isEmpty()){
-                    productsTemp.add(product);
-                    item.setProducts(productsTemp);
-                } else {
-                    item.getProducts().add(product);
-                }
-
-                cart.getItems().add(item);
-                return cart;
+                item.getProducts().add(product);
             }
         } else {
             products.add(product);
             item.setProducts(products);
-            if (cart.getItems().isEmpty()){
+            if (cart.getItems() == null || cart.getItems().isEmpty()){
                 itemTemp.add(item);
                 cart.setItems(itemTemp);
             } else {
                 cart.getItems().add(item);
             }
         }
-
-
         return cart;
     }
 
-    private void validateItems(final List<ItemCart> items) {
-        if (ObjectUtils.isEmpty(items)){
-            return;
+    private List<ItemCart> calculateItemPrice(final List<ItemCart> items) {
+
+        for (ItemCart item : items) {
+            Double priceProduct = 0.00;
+            List<Product> products = item.getProducts();
+            for (Product product : products) {
+                priceProduct += product.getPrice();
+            }
+            item.setPrice(BigDecimal.valueOf(priceProduct));
         }
+        return items;
     }
 
-    private void validateName(final String name){
-        if (name.isEmpty()){
-            return;
+    private BigDecimal calculateCartPrice(List<ItemCart> itemCarts) {
+
+        BigDecimal itemPrice = new BigDecimal(BigInteger.ZERO);
+        for (ItemCart itemCart : itemCarts) {
+            itemPrice = itemCart.getPrice().add(itemPrice);
         }
+
+        return itemPrice;
     }
 
+    private Integer calculateCartQuantity(List<ItemCart> itemCarts) {
 
+        int quantity = 0;
+        for (ItemCart itemCart : itemCarts) {
+            quantity = quantity + itemCart.getQuantity();
+        }
+        return quantity;
+    }
 }

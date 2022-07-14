@@ -21,6 +21,9 @@ public class ItemCart {
 
     private LocalDate date = LocalDate.now();
 
+    @ManyToOne(cascade = CascadeType.ALL)
+    private Cart cart;
+
     public Long getId() {
         return id;
     }
@@ -59,5 +62,13 @@ public class ItemCart {
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(Cart cart) {
+        this.cart = cart;
     }
 }
