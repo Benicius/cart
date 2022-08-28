@@ -1,15 +1,13 @@
 package com.coffee.shop.starbux.cart.service;
 
-import com.coffee.shop.starbux.cart.domains.Cart;
-import com.coffee.shop.starbux.cart.domains.CartStatus;
-import com.coffee.shop.starbux.cart.domains.ItemCart;
-import com.coffee.shop.starbux.cart.domains.Product;
+import com.coffee.shop.starbux.cart.domains.*;
 import com.coffee.shop.starbux.cart.repository.CartRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,26 +23,32 @@ public class CartService {
         this.productService = productService;
     }
 
-    public Cart createCart(final String name,final boolean hasTopping, final Cart cart){
+    public Cart createCart(final CartRequest cart){
 
-        Product productResponse = productService.getProduct(name, hasTopping);
         Cart cartTemp = lastCart();
 
-        if (cartTemp.getId() == null){
-            cartTemp = validatingHasTopping(hasTopping, productResponse, new Cart());
-        } else if (!cartTemp.getItems().isEmpty() && cartTemp.getCartStatus() == CartStatus.PROGRESS){
-            cartTemp = validatingHasTopping(hasTopping, productResponse, cartTemp);
+        if (cart.getCartStatus() == null || cart.getCartStatus().equals(CartStatus.PROGRESS.toString())){
+
+            Product productResponse = productService.getProduct(cart.getName(), cart.isHasTopping());
+
+            if (cartTemp.getId() == null){
+                cartTemp = validatingHasTopping(cart.isHasTopping(), productResponse, new Cart());
+            } else if (!cartTemp.getItems().isEmpty()){
+                cartTemp = validatingHasTopping(cart.isHasTopping(), productResponse, cartTemp);
+            }
+
+            List<ItemCart> itemCarts = calculateItemPrice(cartTemp.getItems());
+            cartTemp.setItems(itemCarts);
+
+            Integer cartQuantity = calculateCartQuantity(itemCarts, cart.getQuantity());
+            cartTemp.setCartQuantity(cartQuantity);
+
+            BigDecimal cartPrice = calculateCartPrice(itemCarts);
+            cartTemp.setCartPrice(cartPrice);
         }
-
-        List<ItemCart> itemCarts = calculateItemPrice(cartTemp.getItems());
-
-        cartTemp.setItems(itemCarts);
-        BigDecimal cartPrice = calculateCartPrice(itemCarts);
-        cartTemp.setCartPrice(cartPrice);
-
-        Integer cartQuantity = calculateCartQuantity(itemCarts);
-        cartTemp.setCartQuantity(cartQuantity);
-
+        if (cart.getCartStatus() != null){
+            cartTemp.setCartStatus(CartStatus.valueOf(cart.getCartStatus()));
+        }
         return cartRepository.save(cartTemp);
     }
 
@@ -53,7 +57,10 @@ public class CartService {
         List<Cart> carts = cartRepository.findAll();
 
         if(!carts.isEmpty()){
-            return carts.get(carts.size()-1);
+            cart = carts.get(carts.size()-1);
+        }
+        if (!cart.getCartStatus().equals(CartStatus.PROGRESS)){
+            cart = new Cart();
         }
         return cart;
     }
@@ -97,18 +104,24 @@ public class CartService {
         return items;
     }
 
-    private BigDecimal calculateCartPrice(List<ItemCart> itemCarts) {
+    private BigDecimal calculateCartPrice(final List<ItemCart> itemCarts) {
 
         BigDecimal itemPrice = new BigDecimal(BigInteger.ZERO);
         for (ItemCart itemCart : itemCarts) {
-            itemPrice = itemCart.getPrice().add(itemPrice);
+            itemPrice = itemCart.getPrice()
+                    .add(itemPrice)
+                    .multiply(new BigDecimal(itemCart.getQuantity()));
         }
 
         return itemPrice;
     }
 
-    private Integer calculateCartQuantity(List<ItemCart> itemCarts) {
+    private Integer calculateCartQuantity(final List<ItemCart> itemCarts, final Integer cartQuantity) {
 
+        if(cartQuantity !=null){
+            ItemCart item = itemCarts.get(itemCarts.size()-1);
+            item.setQuantity(cartQuantity);
+        }
         int quantity = 0;
         for (ItemCart itemCart : itemCarts) {
             quantity = quantity + itemCart.getQuantity();
